@@ -6,8 +6,8 @@ const intents = new Discord.Intents([
 ]);
 
 class DiscordClient {
-    constructor(apiKey, username) {
-        this.apiKey = apiKey;
+    constructor(token, username) {
+        this.token = token;
         this.client = new Discord.Client({ws: { intents }});
         this.hooks = {};
         this.username = username;
@@ -48,7 +48,7 @@ class DiscordClient {
     }
 
     login() {
-        this.client.login(this.apiKey);
+        this.client.login(this.token);
     }
 }
 

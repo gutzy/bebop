@@ -4,8 +4,8 @@ const Settings = require('./lib/Settings');
 const naturalRequests = ["Can you", "Will you", "Do you mind", "Please", "Just"]
 
 class Bebop {
-    constructor(apiKey, username) {
-        this.client = new DiscordClient(apiKey, username);
+    constructor(token, username) {
+        this.client = new DiscordClient(token, username);
         this.commands = {}
 
         this._bindHooks();
