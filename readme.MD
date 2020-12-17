@@ -4,7 +4,7 @@ Bebop
 
 Bebop is a DIY punk project so why not put it online and make it open source? 
 
-###Installation
+### Installation
 
 ##### Requirements
 - A Discord app with a bot.
