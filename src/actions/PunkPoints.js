@@ -1,4 +1,4 @@
-const Settings = require('../lib/Settings');
+const Settings = require('../lib/Settings'), utils = require("../lib/BebopUtils");
 
 const blacklist = ["705899224193171456"];
 
@@ -36,11 +36,8 @@ function giveCommand(props, author, channel, guild, client) {
 
     let everybody = false;
     if (props[0] && props[1]) {
-        targetUser = props[0];
+        targetUser = utils.parseUser(props[0]);
         amount = props[1];
-        if (targetUser[0] === "<") targetUser = targetUser.substring(3, targetUser.length-1);
-        if (targetUser[0] === '@') targetUser = targetUser.substring(1);
-        if (targetUser[0] === "&") targetUser = targetUser.substring(1);
 
         guild.members.fetch().then(members => {
 
@@ -82,12 +79,9 @@ function getUserPoints(props, author, channel, guild, client) {
     let punkPoints = Settings.get('punk-points', null);
     if (!punkPoints) { punkPoints = {[client.user.id] : 666}; }
 
-    let targetUser = props[0];
+    let targetUser = utils.parseUser(props[0]);
     let points;
-    while (targetUser[targetUser.length-1] === '?') targetUser = targetUser.substring(0, targetUser.length-1)
-    while (targetUser[targetUser.length-1] === '>') targetUser = targetUser.substring(0, targetUser.length-1)
-    if (targetUser[0] === '@') targetUser = targetUser.substring(1);
-    if (targetUser[0] === "<") targetUser = targetUser.substring(3);
+
     guild.members.fetch().then(members => {
 
         for (let member of members) {
