@@ -44,7 +44,7 @@ class DiscordClient {
     _onMessage(message) {
         const {content, author, channel} = message;
         const {guild} = channel;
-        if (this.hooks['message']) { for (let hook of this.hooks['message']) hook(content, author, channel, guild, this.client); }
+        if (this.hooks['message']) { for (let hook of this.hooks['message']) hook(content, author, channel, guild, this.client, message); }
     }
 
     login() {

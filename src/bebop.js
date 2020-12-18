@@ -40,7 +40,9 @@ class Bebop {
     }
 
     _bindHooks() {
-        this.client.addHook('message', (content, author, channel, guild, client) => {
+        this.client.addHook('message', (content, author, channel, guild, client, message) => {
+
+            if (author.bot) return false; // ignore bots!
 
             let props = content.split(/ /g);
             if (props[0].toLowerCase().indexOf('bebop') !== 0) return; // Only "bebop" calls will be answered
@@ -61,7 +63,7 @@ class Bebop {
             // first iteration, look for exact commands
             for (let c in this.commands) {
                 if (joined === c.toLowerCase()) {
-                    for (let cb of this.commands[c]) cb(props, author, channel, guild, client);
+                    for (let cb of this.commands[c]) cb(props, author, channel, guild, client, message);
                     return true;
                 }
             }
@@ -71,7 +73,7 @@ class Bebop {
                 if (joined.toLowerCase().indexOf(c.toLowerCase()) === 0) {
                     props = props.join(' ').substring(c.length + (c.split(/ /g).length-1) - props[0].length).trim().split(/ /g);
                     props.shift();
-                    for (let cb of this.commands[c]) cb(props, author, channel, guild, client);
+                    for (let cb of this.commands[c]) cb(props, author, channel, guild, client, message);
                     return true;
                 }
             }

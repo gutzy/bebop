@@ -38,7 +38,6 @@ function giveCommand(props, author, channel, guild, client) {
     if (props[0] && props[1]) {
         targetUser = props[0];
         amount = props[1];
-        console.log(props);
         if (targetUser[0] === "<") targetUser = targetUser.substring(3, targetUser.length-1);
         if (targetUser[0] === '@') targetUser = targetUser.substring(1);
         if (targetUser[0] === "&") targetUser = targetUser.substring(1);
@@ -94,7 +93,8 @@ function getUserPoints(props, author, channel, guild, client) {
         for (let member of members) {
             if (member[1].user.id === targetUser || member[1].user.username === targetUser) {
                 points = punkPoints[targetUser]
-                return channel.send("<@"+author.id+">, it looks like <@"+member[1].user.id+"> has "+points+" punk points.");
+                if (points && points > 0) return channel.send("<@"+author.id+">, it looks like <@"+member[1].user.id+"> has "+points+" punk points.");
+                else return channel.send("<@"+author.id+">, it looks like <@"+member[1].user.id+"> is not punk at all...");
             }
         }
         return channel.send("<@"+author.id+">, I have no idea.");
