@@ -95,12 +95,12 @@ function addWorld(world) {
     }
 }
 
-function addAnswer(callback, question, attribute, target = null, value = null, valueTransform = null) {
-    _answers.push({callback, question, attribute, target, value, valueTransform});
+function addAnswer(callback, question, attribute, target = null, value = null, valueTransform = null, targetTransform = null) {
+    _answers.push({callback, question, attribute, target, value, valueTransform, targetTransform});
 }
 
-function addCommand(callback, action, thing, target = null, value = null, valueTransform = null) {
-    _commands.push({callback, action, thing, target, value, valueTransform});
+function addCommand(callback, action, thing, target = null, value = null, valueTransform = null, targetTransform = null) {
+    _commands.push({callback, action, thing, target, value, valueTransform, targetTransform});
 }
 
 function setRejection(rejection, callback) {
@@ -108,11 +108,11 @@ function setRejection(rejection, callback) {
 }
 
 function addAnswers(answers) {
-    for (let c of answers) addAnswer(c.callback, c.question, c.attribute, c.target, c.value, c.valueTransform)
+    for (let c of answers) addAnswer(c.callback, c.question, c.attribute, c.target, c.value, c.valueTransform, c.targetTransform)
 }
 
 function addCommands(commands) {
-    for (let c of commands) addCommand(c.callback, c.action, c.thing, c.target, c.value, c.valueTransform)
+    for (let c of commands) addCommand(c.callback, c.action, c.thing, c.target, c.value, c.valueTransform, c.targetTransform)
 }
 
 function doAction(doc, req) {
@@ -132,7 +132,9 @@ function doAction(doc, req) {
                 console.log("No target!", {action, thing})
                 continue;
             }
-            target = doc.matchOne(command.target).normalize().text();
+            target = doc.matchOne(command.target)
+            if (command.targetTransform) target = command.targetTransform(target);
+            target = target.normalize().text();
         }
         if (command.value) {
             if (!doc.has(command.value)) {
@@ -174,7 +176,10 @@ function doAnswer(doc, req) {
               return;
           }
           if (!doc.match(`${start} * ${end}`).found) return;
-          target = doc.matchOne(answer.target).normalize().text();
+
+          target = doc.matchOne(answer.target)
+          if (answer.targetTransform) target = answer.targetTransform(target);
+          target = target.normalize().text();
         }
         if (answer.value) {
           if (!doc.has(answer.value)) {
@@ -186,7 +191,7 @@ function doAnswer(doc, req) {
           value = value.normalize().text();
         }
         if (!answer.target && !answer.value) { // simple match answer, do not allow anything between question and attribute
-            if (!doc.has(`^${answer.question} ${answer.attribute}`)) return;
+            if (!doc.has(`${start}`)) return;
         }
 
         if (!_hadRejection) {
@@ -196,7 +201,6 @@ function doAnswer(doc, req) {
     });
 
     if (!answered && !_hadRejection) {
-    console.log("I'm here", answered)
         _hadRejection = true;
         if (rejections['unmatched']) rejections['unmatched'](req, doc)
     }
@@ -222,7 +226,7 @@ function runIntention(text, req) {
     const doc = nlp(text.trim()),
         intention = getIntention(doc)
 
-    if (DEBUG) console.log("[intention]", {intention, text: doc.text()})
+    if (DEBUG) console.log(`[bebop: ${intention}]`, doc.text())
     switch (intention) {
         case 'action': return doAction(doc, req)
         case 'question': return doAnswer(doc, req)
@@ -237,6 +241,7 @@ function getTerms(text) {
 }
 
 module.exports = {
+    questionTypes,
     addWorld,
     addCommands,
     addAnswers,

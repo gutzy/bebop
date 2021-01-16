@@ -25,13 +25,20 @@ function giveCommand(req, target, value) {
     }
 }
 
+async function getYourPoints(req) {
+
+    const points = await pointsBank.getPoints(req.client, req.client.user.id)
+
+    if (points) return req.channel.send("<@"+req.author.id+">, I have "+points+" punk points.");
+    return req.channel.send("<@"+req.author.id+">, I am not punk at all :(");
+}
+
 async function getMyPoints(req) {
 
-    const user = req.client.user.id;
-    const points = await pointsBank.getPoints(req.client, user)
+    const points = await pointsBank.getPoints(req.client, req.author.id)
 
     if (points) return req.channel.send("<@"+req.author.id+">, you seem to have "+points+" punk points.");
-    return req.channel.send("<@"+req.author.id+">, not at all.");
+    return req.channel.send("<@"+req.author.id+">, you are not punk at all.");
 }
 
 async function getUserPoints(req, targetUser) {
@@ -83,6 +90,7 @@ async function requestPoints(props, author, channel, guild, client) {
 module.exports = {
     give : giveCommand,
     my : getMyPoints,
+    your: getYourPoints,
     get : getUserPoints,
     top: getTopList,
     request : requestPoints,

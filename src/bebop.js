@@ -11,7 +11,6 @@ class Bebop {
         this.commands = {}
         this.responses = []
 
-
         this._bindHooks();
     }
 
@@ -42,7 +41,6 @@ class Bebop {
             read.addMembers(members);
 
         const text = content.split('').slice(content.indexOf(' ')).join('').trim();
-        console.log('[bebop]', text);
 
         const res = read.runIntention(text, {content, author, channel, guild, client, message})
         if (!res && !read.hadRejection()) channel.send("<@"+author.id+">, What?")

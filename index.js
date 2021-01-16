@@ -4,6 +4,7 @@ const Credentials = require('./src/sec/credentials');
 // actions
 const Rocksteady = require('./src/responders/Rocksteady');
 const Read = require('./src/actions/Read');
+const Ask = require('./src/actions/Ask');
 const PunkPoints = require('./src/actions/PunkPoints');
 
 // const Read = require('./src/actions/Read');
@@ -25,6 +26,7 @@ bebop.setRejection('unmatched', (req, doc) => {req.channel.send(`<@${req.author.
 bebop.addWorld([
         {type: "thing", singular: "point", plural: "points"},
         {type: "attribute", name: "punk" },
+        {type: "attribute", name: "age" },
         {type: "action", action: "give", synonyms: ["provide", "hand out","supply","offer","grant","award","bestow"]},
         {type: "action", action: "analyze", synonyms: ["dissect"]},
 ])
@@ -38,8 +40,17 @@ bebop.addCommands([
 ])
 
 bebop.addAnswers([
-    { callback: PunkPoints.get, question: "#LevelQuestion+", attribute: "punk", target: "#Username" },
-    { callback: PunkPoints.my, question: "#LevelQuestion+", attribute: "punk", target: "#Author" },
+    //ask
+    { callback: Ask.WhoIs, question: "Who is this?", target: "#Noun+"},
+    { callback: Ask.WhoAmI, question: "Who am i?"},
+
+    // punk points
+    { callback: PunkPoints.get, question: "#LevelQuestion+", attribute: "punk", target: "is #Username", targetTransform: (m => m.match('#Username')) },
+    { callback: PunkPoints.get, question: "#QuantityQuestion+", attribute: "points", target: "#Username (got|have|has)", targetTransform: (m => m.match('#Username')) },
+    { callback: PunkPoints.my, question: "#LevelQuestion+", attribute: "punk", target: "am #Author" },
+    { callback: PunkPoints.my, question: "#QuantityQuestion+", attribute: "points", target: "#Author (got|have|has)" },
+    { callback: PunkPoints.your, question: "#LevelQuestion+", attribute: "punk", target: "(are|is) (you|bebop)" },
+
 ])
 
 
