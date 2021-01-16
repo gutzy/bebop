@@ -1,4 +1,4 @@
-const Settings = require('../lib/Settings'), utils = require('../lib/BebopUtils');
+const utils = require('../lib/Utils');
 
 const revealStrings = [
     "Hi boys, I'm baaaack", "BEBOP IS HERE", "Somebody called me?", "HELLO!! Have you been looking for ME??"

@@ -11,9 +11,10 @@ module.exports = {
     },
 
     parseUser(username) {
-        if (username[0] === "<") username = username.substring(3, username.length-1);
+        if (username[0] === "<" && username[username.length-1] === ">") username = username.substring(1, username.length-1);
         if (username[0] === '@') username = username.substring(1);
         if (username[0] === "&") username = username.substring(1);
+        if (username[0] === '!') username = username.substring(1);
         return username;
     },
 
@@ -35,6 +36,12 @@ module.exports = {
         chn = props[props.length-1];
         return [user, chn];
     },
+
+    parseThingOnSubject(props) {
+        let thing = props[0], subject = props.slice(1).join(" ");
+        return [thing, subject];
+    },
+
 
     getTextChannel(client, channelName) {
         return client.channels.cache.find(r => r.name === channelName && r.type === "text");
