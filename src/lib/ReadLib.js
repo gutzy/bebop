@@ -8,8 +8,10 @@ const questionTypes = {
     TimeQuestion: ["When"]
 }
 
-let _init = false;
+let _init = false, _hadRejection = false;
 const _commands = [], _answers = [], rejections = {};
+
+const DEBUG = true;
 
 function init() {
 
@@ -36,6 +38,7 @@ function init() {
 
         world.postProcess(doc => {
             doc.match('you').tag("Self")
+            doc.match('i').tag("Author")
             doc.match('#NumericValue').tag("Number")
             doc.match('/<@[!]?[0-9]+>/').tag("Username")
         })
@@ -100,8 +103,6 @@ function addCommand(callback, action, thing, target = null, value = null, valueT
     _commands.push({callback, action, thing, target, value, valueTransform});
 }
 
-
-
 function setRejection(rejection, callback) {
     rejections[rejection] = callback;
 }
@@ -118,30 +119,32 @@ function doAction(doc, req) {
     let action = doc.matchOne('#Action').normalize().out('text');
     let thing = doc.matchOne('#Thing').normalize().nouns().toSingular().out('text');
 
-    let target, value, rejected = false;
+
+    let target, value;
     for (let command of _commands) {
+    if (DEBUG) console.log(`*Action`, action, thing, {action: command.action, thing: command.thing, target: command.target, value: command.value}, thing === (command.thing || ''))
         target = value = null;
-        if (action !== command.action && !doc.has('#'+command.action)) return;
+        if (action !== command.action && !doc.has('#'+command.action)) continue;
         action = command.action;
-        if (thing !== command.thing) return;
+        if (thing !== (command.thing || '')) continue;
         if (command.target) {
             if (!doc.has(command.target)) {
                 console.log("No target!", {action, thing})
-                return;
+                continue;
             }
             target = doc.matchOne(command.target).normalize().text();
         }
         if (command.value) {
             if (!doc.has(command.value)) {
                 console.log("No value!", {action, thing})
-                if (rejections['no_value']) { rejections['no_value'](req, doc); }
-                return;
+                if (rejections['no_value']) { rejections['no_value'](req, doc); _hadRejection = true; }
+                continue;
             }
             let match = `${command.value} * #Thing`;
             if (!doc.has(`${command.value} * #${command.thing}`)) {
                 console.log("Value is specified after thing!", {action, thing}, command.value+' . #'+command.thing)
-                if (rejections['value_after']) { rejections['value_after'](req, doc); }
-                return;
+                if (rejections['value_after']) { rejections['value_after'](req, doc);  _hadRejection = true; }
+                continue;
             }
             value = doc.matchOne(command.value);
             if (command.valueTransform) value = command.valueTransform(value);
@@ -149,15 +152,15 @@ function doAction(doc, req) {
         }
 
         command.callback(req, target, value, doc);
-        return true;
+        if (!_hadRejection) {
+            return true;
+        }
     }
 }
 
 function doAnswer(doc, req) {
 
-    console.log("* Answer:", doc.text());
-
-    let answered = false, rejected = false, target, value, start, end;
+    let answered = false, target, value, start, end;
     _answers.forEach(answer => {
         start = `^${answer.question} ${answer.attribute||''}`;
         end = `${answer.value?answer.value+' ':''}${answer.target||''}`;
@@ -165,8 +168,9 @@ function doAnswer(doc, req) {
         if (!doc.has(`^${answer.question}`)) return;
         if (answer.attribute && !doc.has(`^${answer.question} ${answer.attribute}`)) return;
         if (answer.target) {
+          console.log(answer.target, doc.text(), doc.has(`${start} * ${answer.target}`))
           if (!doc.has(`${start} * ${answer.target}`)) {
-              if (rejections['no_value']) { rejections['no_target'](req, doc); rejected = true; }
+              if (rejections['no_target']) { rejections['no_target'](req, doc);  _hadRejection = true; }
               return;
           }
           if (!doc.match(`${start} * ${end}`).found) return;
@@ -174,7 +178,7 @@ function doAnswer(doc, req) {
         }
         if (answer.value) {
           if (!doc.has(answer.value)) {
-              if (rejections['no_value']) { rejections['no_value'](req, doc); rejected = true; }
+              if (rejections['no_value']) { rejections['no_value'](req, doc);  _hadRejection = true; }
               return;
           }
           value = doc.matchOne(answer.value);
@@ -184,27 +188,41 @@ function doAnswer(doc, req) {
         if (!answer.target && !answer.value) { // simple match answer, do not allow anything between question and attribute
             if (!doc.has(`^${answer.question} ${answer.attribute}`)) return;
         }
-        answer.callback(req, target, value, doc);
-        answered = true;
+
+        if (!_hadRejection) {
+            answer.callback(req, target, value, doc);
+            answered = true;
+        }
     });
 
-    if (!answered && !rejected && rejections['unmatched']) rejections['unmatched'](req, doc)
+    if (!answered && !_hadRejection) {
+    console.log("I'm here", answered)
+        _hadRejection = true;
+        if (rejections['unmatched']) rejections['unmatched'](req, doc)
+    }
     return true;
 }
 
 function getIntention(doc) {
+
 
     if (doc.has('#Action')) return 'action';
     if (doc.has('^#QuestionWord')) return 'question';
     return 'unknown';
 }
 
+function hadRejection() { return _hadRejection }
+
 function runIntention(text, req) {
+    _hadRejection = false;
+
     if (!_init) init();
+
 
     const doc = nlp(text.trim()),
         intention = getIntention(doc)
 
+    if (DEBUG) console.log("[intention]", {intention, text: doc.text()})
     switch (intention) {
         case 'action': return doAction(doc, req)
         case 'question': return doAnswer(doc, req)
@@ -226,5 +244,6 @@ module.exports = {
     addWords,
     getTerms,
     setRejection,
+    hadRejection,
     runIntention
 }
