@@ -13,6 +13,20 @@ class Bebop {
         this.client.login();
     }
 
+    addDefs(defs) {
+        let responses = [], commands = [], answers = [];
+        for (let def of defs) {
+            switch (def.type) {
+                case 'response': responses.push(def); break;
+                case 'command': commands.push(def); break;
+                case 'answer': answers.push(def); break;
+            }
+        }
+        if (commands.length > 0) this.addCommands(commands);
+        if (answers.length > 0) this.addAnswers(answers);
+        if (responses.length > 0) this.addResponses(responses);
+    }
+
     addWorld = (world) => read.addWorld(world)
     addResponses = (responses) => read.addResponses(responses);
     addCommands = (commands) => read.addCommands(commands);
