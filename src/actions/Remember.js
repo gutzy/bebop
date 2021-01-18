@@ -1,25 +1,42 @@
 const Settings = require('../lib/Settings');
 
-function saveMemory(props, author, channel, guild) {
-    if (props.length > 0) {
+function saveMemory(res, target, value, doc) {
+
+    // convert you/i stuff
+    doc.match('you are').replaceWith('you_are_x_')
+    doc.match("you're").replaceWith('youre_x_')
+    doc.match('your').replaceWith('your_x_')
+    doc.match("you").replaceWith('you_x_')
+
+    doc.match('my').replaceWith("your")
+    doc.match('i am').replaceWith("you are")
+    doc.match("I'm").replaceWith("you're")
+    doc.match('i').replaceWith("you")
+
+    doc.match("you_x_").replaceWith("I")
+    doc.match("youre_x_").replaceWith("I'm")
+    doc.match("you_are_x_").replaceWith("I am")
+    doc.match("your_x_").replaceWith("my")
+
+    if (target.trim().length > 0) {
         const memories = Settings.get('memories', {});
-        memories[author.id] = props.join(" ");
+        memories[res.author.id] = doc.text();
         Settings.set('memories', memories);
-        return channel.send("ok, <@"+author.id+">, I'll remember that.");
+        return res.channel.send("ok, <@"+res.author.id+">, I'll remember that.");
     }
     else {
-        return channel.send("Uhh, remember what, <@"+author.id+'>..?');
+        return res.channel.send("Uhh, remember what, <@"+res.author.id+'>..?');
     }
 }
 
-function loadMemory(props, author, channel, guild) {
+function loadMemory(res) {
     const memories = Settings.get('memories', {});
 
-    if (memories[author.id]) {
-        return channel.send("oh yeah <@"+author.id+">, I remember "+memories[author.id]);
+    if (memories[res.author.id]) {
+        return res.channel.send("oh yeah <@"+res.author.id+">, I remember "+memories[res.author.id]);
     }
     else {
-        return channel.send("I hardly remember who you are, <@"+author.id+">...");
+        return res.channel.send("I hardly remember who you are, <@"+res.author.id+">...");
     }
 }
 

@@ -10,6 +10,7 @@
     "compromise-numbers": "^1.1.0",
     "compromise-sentences": "^0.1.1",
     "discord.js": "^12.5.1",
+    "node-fetch": "^2.6.1",
     "uniqid": "^5.2.0"
   }
 }

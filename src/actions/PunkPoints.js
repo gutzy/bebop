@@ -8,7 +8,7 @@ function giveCommand(req, target, value) {
 
         req.guild.members.fetch().then(async members => {
 
-            const tu = members.find(m => m.user.id*1 === targetUser);
+            const tu = members.find(m => m.user.id*1 === targetUser*1);
             if (tu) {
                 try {
                     await pointsBank.givePoints(req.client, req.author.id, tu.id, amount);
@@ -60,7 +60,6 @@ async function getTopList(req) {
         .map(pair => pair.split(":"))
         .forEach((entry, index) => {
             member = members.find(mem => mem.id === entry[0]);
-            console.log(member);
             str += `${index + 1}: **${member.nickname ? member.nickname : member.user.username}**: ${entry[1]} punk points` + "\n";
         });
 
