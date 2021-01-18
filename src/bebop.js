@@ -22,9 +22,11 @@ class Bebop {
 
     async processDoc(doc, guild, author, client) {
         const members = await guild.members.fetch(),
-            responses = read.getResponses();
+            responses = read.getResponses(), phrases = read.getPhrases();
+
         read.addMembers(doc, members, author.id, client.user.id);
-        read.addResponsePhrases(doc, responses.map(it => it.phrase));
+        read.addDocTags(doc, responses.map(it => it.phrase), 'Response');
+        read.addDocTags(doc, phrases.map(it => it.phrase), 'Phrase');
     }
 
     async runCommands(content, author, channel, guild, client, message) {

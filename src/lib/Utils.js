@@ -1,4 +1,6 @@
-const onWords = ['at','on','in','towards','against'];
+const {getDoc} = require('./ReadLib');
+
+const defaultResponseOptions = { maxMessages: 50, timeLimit: 10 }
 
 module.exports = {
     validateModMessage(message, channel, sendResponse = false) {
@@ -10,36 +12,34 @@ module.exports = {
         return true;
     },
 
+    awaitResponses(channel, match, options = {}) {
+        options = {...defaultResponseOptions, ...options};
+
+        const filter = (r) => {
+            if (r.author.bot || r.channel.id !== channel.id) return false;
+            if (options.answer && r.author !== options.answer) return false;
+            return true;
+        }
+
+        return new Promise(async (resolve, reject) => {
+            const collector = channel.createMessageCollector(filter, { max: options.maxMessages, time: options.timeLimit * 1000 });
+            let st;
+            collector.on('collect', m => {
+                st = getDoc(m.content).normalize({whitespace: true, case: true, punctuation: true,});
+                if (st.has(match)) {
+                    resolve(m);
+                }
+            });
+            collector.on('end', collected => resolve(false));
+        })
+    },
+
     parseUser(username) {
         if (username[0] === "<" && username[username.length-1] === ">") username = username.substring(1, username.length-1);
         if (username[0] === '@') username = username.substring(1);
         if (username[0] === "&") username = username.substring(1);
         if (username[0] === '!') username = username.substring(1);
         return username;
-    },
-
-    parseChannel(props, _default = 'general') {
-        let channelToReveal = props[0];
-        if (props[1]) channelToReveal = props[1];
-        if (!channelToReveal) channelToReveal = _default;
-        return channelToReveal;
-    },
-
-    parseUserInChannel(props) {
-        let user = null, chn = null;
-        for (let p of props) {
-            if (!user) {
-                if (onWords.indexOf(p) > -1) continue;
-                else user = p; break;
-            }
-        }
-        chn = props[props.length-1];
-        return [user, chn];
-    },
-
-    parseThingOnSubject(props) {
-        let thing = props[0], subject = props.slice(1).join(" ");
-        return [thing, subject];
     },
 
 

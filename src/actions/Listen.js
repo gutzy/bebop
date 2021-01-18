@@ -3,6 +3,8 @@ const Settings = require('../lib/Settings'), read = require('../lib/ReadLib')
 const curseMilestones = [ 50, 100, 500, 1000, 5000, 10000 ]
 
 function CurseWords(req, word) {
+    console.log({word})
+    word = word.trim().toLowerCase();
     const curses = Settings.get('curses', {})
     if (!curses[word]) curses[word] = {};
     if (!curses[word][req.author.id]) curses[word][req.author.id] = 0;

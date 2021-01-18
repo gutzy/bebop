@@ -7,6 +7,7 @@ const Listen = require('./src/actions/Listen');
 const Ask = require('./src/actions/Ask');
 const PunkPoints = require('./src/actions/PunkPoints');
 const Help = require('./src/actions/Help');
+const Quiz = require('./src/actions/Quiz');
 
 const bebop = new Bebop(Credentials.token, Credentials.username);
 
@@ -30,12 +31,14 @@ bebop.addWorld([
 
     // actions
         {type: "action", action: "help" },
+        {type: "action", action: "start", synonyms: ["begin","run","initialize"] },
+        {type: "action", action: "stop", synonyms: ["end"] },
         {type: "action", action: "remember" },
         {type: "action", action: "give", synonyms: ["provide", "hand out","supply","offer","grant","award","bestow"]},
         {type: "action", action: "analyze", synonyms: ["dissect"]},
 
     // Words
-        {type: "words", tags: ["CurseWord", "Verb"], words: ["fuck","shit","cunt","wanker"]}
+        {type: "words", words: ["fuck","shit","cunt","wanker","fucker"], tags: ["CurseWord"] }
 ])
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,6 +52,9 @@ bebop.addCommands([
     { callback: Read.Analyze, action: "analyze", target: "*" },
     // remember
     { callback: Remember.saveMemory, action: "remember", target: "*"},
+    // quiz
+    { callback: Quiz.startQuiz, action: "start", target: "(a|the)? quiz"},
+    { callback: Quiz.stopQuiz, action: "stop", target: "(a|the)? quiz"},
 
 ])
 ///////////////////////////////////////////////////////////////////////////////
@@ -56,6 +62,7 @@ bebop.addCommands([
 bebop.addAnswers([
     //ask
     { callback: Ask.WhoIs, question: "who is this?", target: "#Noun+"},
+    { callback: Ask.WhoAreYou, question: "who are you"},
     { callback: Ask.WhoAmI, question: "who am i?"},
     { callback: Ask.WhatsMyAgeAgain, question: "what's my age again", open: true},
     { callback: Ask.CurrencyCovertAmount, question: "#QuantityQuestion", attribute: "/[a-zA-Z]{3}/ *", target: "#NumericValue"},
@@ -75,7 +82,7 @@ bebop.addAnswers([
 // RESPONSES
 bebop.addResponses([
     { callback: Ask.GunOnMyBack, phrase: "It's not my imagination", open: true, bots: false },
-    { callback: Listen.CurseWords, phrase: "#CurseWord+", loose: true, open: true, bots: false },
+    { callback: Listen.CurseWords, phrase: "#CurseWord", loose: true, open: true, bots: false },
 
 ])
 ///////////////////////////////////////////////////////////////////////////////

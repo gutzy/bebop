@@ -2,10 +2,14 @@ const fetch = require('node-fetch');
 
 async function WhoIs(req, target, value, doc) {
     if (doc.has('#Author')) return req.channel.send(`<@${req.author.id}>, it is you!`)
-    if (doc.has('#Self')) return req.channel.send(`<@${req.author.id}>, it is me, Bebop!!!`)
+    if (doc.has('(#Self|bebop)')) return req.channel.send(`<@${req.author.id}>, it is me, Bebop!!!`)
     if (doc.has('#Member')) return req.channel.send(`<@${req.author.id}>, ${doc.match('#Member').text()} is our friend!`)
     if (doc.has('#Person')) return req.channel.send(`Hmmmmmm <@${req.author.id}>, gark.. I'm not familiar with ${doc.match('#Person').text()}. I don't really want to be either!`)
     req.channel.send(`<@${req.author.id}> uhh, I am not even sure if ${target} is even a person..`)
+}
+
+async function WhoAreYou(req, target, value, doc) {
+    req.channel.send(`<@${req.author.id}> I am bebop.. I'm a mutant punk pig!`)
 }
 
 async function CurrencyCovertAmount(req, target, value, doc) {
@@ -43,6 +47,7 @@ async function GunOnMyBack(req, target, value, doc) {
 module.exports = {
     WhoIs,
     WhoAmI,
+    WhoAreYou,
     WhatsMyAgeAgain,
     CurrencyCovertAmount,
     GunOnMyBack,

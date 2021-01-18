@@ -13,9 +13,9 @@ const QuestionTypes = {
 const requestPrefixes = ["Please", "Would you", "Could you", "Will you", "May I ask you to"]
 
 let _init = false, _hadRejection = false;
-const _commands = [], _answers = [], _responses = [], rejections = {};
+const _commands = [], _answers = [], _responses = [], _phrases = [], rejections = {};
 
-const DEBUG = true;
+const DEBUG = false;
 
 function init() {
 
@@ -83,23 +83,33 @@ function addAttribute(name) {
         world.addWords({[name]: ['Attribute', name]})
     })
 }
-function addResponsePhrases(doc, phrases) {
-    for (let phrase of phrases) doc.match(phrase).tag("Response");
+
+function addDocTags(doc, phrases, tags = []) {
+    if (typeof tags === "string") tags = [tags];
+    for (let p of phrases) {
+        if (!p instanceof Array) p = [p];
+        for (let phrase of p) {
+
+            for (let tag of tags) {
+                doc.match(phrase).tag(tag);
+            }
+        }
+    }
 }
 
 function addMembers(doc, members, authorId, botId) {
-        members.forEach(member => {
-            if (member.nickname) doc.match(member.nickname).tag("Member");
-            if (member.user.username) doc.match(member.user.username).tag("Member");
-            if (member.id === authorId) {
-                if (member.nickname) doc.match(member.nickname).tag("Author")
-                if (member.user.username) doc.match(member.user.username).tag("Author");
-            }
-            if (member.id === botId) {
-                if (member.nickname) doc.match(member.nickname).tag("Self")
-                if (member.user.username) doc.match(member.user.username).tag("Self");
-            }
-        })
+    members.forEach(member => {
+        if (member.nickname) doc.match(member.nickname).tag("Member");
+        if (member.user.username) doc.match(member.user.username).tag("Member");
+        if (member.id === authorId) {
+            if (member.nickname) doc.match(member.nickname).tag("Author")
+            if (member.user.username) doc.match(member.user.username).tag("Author");
+        }
+        if (member.id === botId) {
+            if (member.nickname) doc.match(member.nickname).tag("Self")
+            if (member.user.username) doc.match(member.user.username).tag("Self");
+        }
+    })
 }
 
 function addWords(wordsObj, tags = []) {
@@ -146,6 +156,10 @@ function addCommand(callback, action, thing, target = null, value = null, valueT
     _commands.push({callback, action, thing, target, value, valueTransform, targetTransform});
 }
 
+function addPhrase(phrase, tags = []) {
+    _phrases.push({phrase, tags});
+}
+
 function setRejection(rejection, callback) {
     rejections[rejection] = callback;
 }
@@ -160,6 +174,10 @@ function addResponses(responses) {
 
 function addCommands(commands) {
     for (let c of commands) addCommand(c.callback, c.action, c.thing, c.target, c.value, c.valueTransform, c.targetTransform)
+}
+
+function addPhrases(phrases, tags = []) {
+    for (let phrase of phrases) addPhrase(phrase, tags);
 }
 
 function doAction(doc, req) {
@@ -279,7 +297,11 @@ function doResponse(doc, req, hasPrefix, isBot) {
             target = target.normalize().text();
         }
         else {
-            target = doc.match(response.phrase).text()
+            if (response.loose) {
+                target = looseNounsVerbs(doc).matchOne(response.phrase).text();
+                if (!target) return false;
+            }
+            else target = doc.match(response.phrase).text()
         }
 
         if (response.value) {
@@ -307,15 +329,25 @@ function doResponse(doc, req, hasPrefix, isBot) {
     return true;
 }
 
+function looseNounsVerbs(doc) {
+    return nlp(nlp(doc.text()).verbs().toInfinitive().parent().text()).nouns().toSingular().parent();
+}
+
 function getIntention(doc) {
+
     if (doc.has('^#RequestPrefix+? #Action')) return 'action';
-    if (doc.has('#Question')) return 'question';
+    if (doc.has('^#Question')) return 'question';
     if (doc.has('#Response')) return 'response';
+    for (let r of _responses) {
+        if (!r.loose) continue;
+        if (looseNounsVerbs(doc).has(r.phrase)) return 'response'
+    }
     return 'unknown';
 }
 
 function hadRejection() { return _hadRejection }
 function getResponses() { return _responses }
+function getPhrases() { return _phrases }
 
 function runIntention(doc, req, hasPrefix, isBot) {
     _hadRejection = false;
@@ -350,10 +382,12 @@ module.exports = {
     addCommands,
     addMembers,
     addWords,
+    addPhrases,
     getDoc,
     getTerms,
-    addResponsePhrases,
+    addDocTags,
     getResponses,
+    getPhrases,
     setRejection,
     hadRejection,
     runIntention
