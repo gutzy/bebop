@@ -1,6 +1,6 @@
 const {getDoc} = require('./ReadLib');
 
-const defaultResponseOptions = { maxMessages: 50, timeLimit: 10 }
+const defaultResponseOptions = { max: 50, time: 10 }
 
 module.exports = {
     validateModMessage(message, channel, sendResponse = false) {
@@ -17,12 +17,12 @@ module.exports = {
 
         const filter = (r) => {
             if (r.author.bot || r.channel.id !== channel.id) return false;
-            if (options.answer && r.author !== options.answer) return false;
+            if (options.from && (r.author !== options.from && r.author.id !== options.from)) return false;
             return true;
         }
 
         return new Promise(async (resolve, reject) => {
-            const collector = channel.createMessageCollector(filter, { max: options.maxMessages, time: options.timeLimit * 1000 });
+            const collector = channel.createMessageCollector(filter, { max: options.max, time: options.time * 1000 });
             let st;
             collector.on('collect', m => {
                 st = getDoc(m.content).normalize({whitespace: true, case: true, punctuation: true,});

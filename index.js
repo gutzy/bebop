@@ -32,7 +32,10 @@ bebop.addWorld([
     // actions
         {type: "action", action: "help" },
         {type: "action", action: "start", synonyms: ["begin","run","initialize"] },
+        {type: "action", action: "add", synonyms: ["create"] },
+        {type: "action", action: "remove", synonyms: ["delete"] },
         {type: "action", action: "stop", synonyms: ["end"] },
+        {type: "action", action: "list" },
         {type: "action", action: "remember" },
         {type: "action", action: "give", synonyms: ["provide", "hand out","supply","offer","grant","award","bestow"]},
         {type: "action", action: "analyze", synonyms: ["dissect"]},
@@ -55,6 +58,9 @@ bebop.addCommands([
     // quiz
     { callback: Quiz.startQuiz, action: "start", target: "(a|the)? quiz"},
     { callback: Quiz.stopQuiz, action: "stop", target: "(a|the)? quiz"},
+    { callback: Quiz.addQuestion, action: "add", target: "(a|the)? quiz question"},
+    { callback: Quiz.listQuestions, action: "list", target: "the? quiz questions"},
+    { callback: Quiz.removeQuestion, action: "remove", target: "the? quiz question"},
 
 ])
 ///////////////////////////////////////////////////////////////////////////////

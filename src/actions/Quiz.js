@@ -26,7 +26,7 @@ async function getPollQuestion(client, channel, quiz, questions, totalQuestions,
     channel.send(`Question ${totalQuestions-(questionsLeft-1)}/${totalQuestions}: ${question}`);
     questionsLeft--;
 
-    const winningAnswer = await utils.awaitResponses(channel, answer, 10),
+    const winningAnswer = await utils.awaitResponses(channel, answer),
         winner = winningAnswer ? winningAnswer.author.id : false;
 
     if (winner) {
@@ -59,12 +59,10 @@ function listQuestions(req) {
     if (!utils.validateModMessage(message, channel)) return channel.send("<@"+author.id+">, Don't tell me what to do!");
 
     const questions = Object.keys(Settings.get('quiz-questions', {}));
-    return channel.send("**Ok <@"+author.id+">, here are all the questions:**\n"+questions.join("\n"))
-}
+    let str = ``;
+    for (let i = 0; i < questions.length; i++) { str += `${i+1}: ${questions[i]}\n`; }
 
-function resetQuiz(req) {
-    const {channel} = req;
-    return channel.send("Ok, reset the quiz questions");
+    return channel.send("**Ok <@"+author.id+">, here are all the questions:**\n"+str)
 }
 
 function stopQuiz(req) {
@@ -76,37 +74,59 @@ function stopQuiz(req) {
     return channel.send("Ok <@"+author.id+">, the quiz is over. Everybody go home!")
 }
 
-function addQuestion(req) {
+async function addQuestion(req) {
 
-    const {content, channel, message, author,} = req;
+    const {content, channel, message, author} = req;
     if (!utils.validateModMessage(message, channel)) return channel.send("<@"+author.id+">, Don't tell me what to do!");
 
-    const s = content.split("|").map(r => r.trim());
-    if (s.length < 2) return channel.send("Missing quiz answer");
-    if (s.length > 2) return channel.send("Use just one | separator");
-    const q = s[0], a = s[1];
+    channel.send(`<@${author.id}>, ok. Enter the question to add:`)
+    const question = await utils.awaitResponses(channel,"*", { from: author, time: 30 })
+    if (!question) return channel.send("No question entered.. Let's try again later.");
+
+    channel.send(`<@${author.id}>, ok. Enter the answer:`)
+    const answer = await utils.awaitResponses(channel,"*", { from: author, time: 30 })
+    if (!answer) return channel.send("No answer entered.. Let's try again later.");
 
     const questions = Settings.get('quiz-questions', {});
-    questions[q] = a;
-
+    questions[question.content.trim()] = answer.content.trim();
     Settings.set('quiz-questions', questions);
-    return channel.send("Ok, set the quiz question and its answer");
+    return channel.send("Ok, added question!")
+
 }
 
-function removeQuestion(req) {
+async function removeQuestion(req, target, value, doc) {
 
     const {props, author, channel, message} = req;
     if (!utils.validateModMessage(message, channel)) return channel.send("<@"+author.id+">, Don't tell me what to do!");
 
-    const s = props.join(" ");
-    const questions = Settings.get('quiz-questions', {});
-    if (!questions[s]) {
-        return channel.send("Couldn't find this quiz question to remove");
-    }
-    delete questions[s];
-    Settings.set('quiz-questions', questions);
-    return channel.send("Ok, removed quiz question");
+    let index = doc.match('#NumericValue$').text();
 
+    if (!index) {
+        channel.send("Enter the # of the question you want to remove:")
+        index = await utils.awaitResponses(channel, '^#NumericValue$', {from: author, time: 10});
+        index = getDoc(index.content).match('#NumericValue').text();
+    }
+
+    if (!index) return channel.send("No question # entered... Let's try again later.")
+
+    index = index *1 - 1;
+
+    const questions = Settings.get('quiz-questions', {});
+    const qs = Object.keys(questions);
+    if (index < 0 || index > qs.length || !qs[index]) return channel.send("Question # is out of range")
+
+    channel.send("Are you sure you want to remove the following question? (answer yes/no)\n - "+qs[index]);
+    const yesNo = await utils.awaitResponses(channel, '(yes|no)', {from: author, time: 10});
+    if (!yesNo) return channel.send("Didn't get a removal confirmation... Aborting.")
+    console.log(yesNo.content);
+
+    if (getDoc(yesNo.content).has('no')) return channel.send("Ok, aborting.");
+
+    else if (getDoc(yesNo.content).has('yes')) {
+        delete questions[qs[index]];
+        Settings.set('quiz-questions', questions);
+        return channel.send("Ok, removed quiz question");
+    }
 }
 
 async function startQuiz(req, target, value, doc) {
@@ -138,5 +158,4 @@ module.exports = {
     listQuestions,
     startQuiz,
     stopQuiz,
-    resetQuiz,
 };

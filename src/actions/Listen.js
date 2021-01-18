@@ -2,9 +2,9 @@ const Settings = require('../lib/Settings'), read = require('../lib/ReadLib')
 
 const curseMilestones = [ 50, 100, 500, 1000, 5000, 10000 ]
 
-function CurseWords(req, word) {
-    console.log({word})
+function CurseWords(req, word, value, doc) {
     word = word.trim().toLowerCase();
+    console.log({word, t: doc.text()})
     const curses = Settings.get('curses', {})
     if (!curses[word]) curses[word] = {};
     if (!curses[word][req.author.id]) curses[word][req.author.id] = 0;
@@ -20,6 +20,5 @@ function CurseWords(req, word) {
 
 module.exports = {
     CurseWords
-
 
 }
