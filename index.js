@@ -1,4 +1,4 @@
-const Bebop = require('./src/bebop');
+const PunkBot = require('./src/core/PunkBot');
 const Credentials = require('./src/sec/credentials');
 
 const Read = require('./src/actions/Read');
@@ -9,7 +9,7 @@ const PunkPoints = require('./src/actions/PunkPoints');
 const Help = require('./src/actions/Help');
 const Quiz = require('./src/actions/Quiz');
 
-const bebop = new Bebop(Credentials.token, Credentials.username);
+const bebop = new PunkBot(Credentials.token, Credentials.username, "bebop");
 
 ///////////////////////////////////////////////////////////////////////////////
 // Rejections Definitions

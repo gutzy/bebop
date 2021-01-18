@@ -1,15 +1,14 @@
-const DiscordClient = require('./DiscordClient');
-    read = require('./lib/ReadLib');
+const DiscordClient = require('./DiscordClient'), read = require('../lib/ReadLib');
 
-class Bebop {
-    constructor(token, username) {
+class PunkBot {
+    constructor(token, username, prefix) {
         this.client = new DiscordClient(token, username);
-
+        this.prefix = prefix;
         this._bindHooks();
     }
 
     start() {
-        console.log("Starting BEBOP")
+        console.log(`Starting ${this.prefix.toUpperCase()}`)
         this.client.login();
     }
 
@@ -46,9 +45,9 @@ class Bebop {
     async runCommands(content, author, channel, guild, client, message) {
 
         if (author.id === client.user.id) return false; // don't answer yourself
-        const hasPrefix = content.toLowerCase().indexOf('bebop') === 0, isBot = author.bot;
+        const hasPrefix = content.toLowerCase().indexOf(this.prefix.toLowerCase()) === 0, isBot = author.bot;
 
-        const doc = read.getDoc(content).replace('^bebop','').trim();
+        const doc = read.getDoc(content).replace(`^${this.prefix}`,'').trim();
         await this.processDoc(doc, guild, author, client)
 
         doc.cache({root:true});
@@ -72,4 +71,4 @@ class Bebop {
     }
 }
 
-module.exports = Bebop
+module.exports = PunkBot
