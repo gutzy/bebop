@@ -3,8 +3,9 @@ const Settings = require('../lib/Settings'), utils = require('../lib/Utils'), {g
 
 const AnswerReward = 5;
 const TimeLimit = 10;
+const MinimumQuestionsForPrizeAwards = 5;
 
-let shouldStopQuiz = false, answerTimeout;
+let quizStarted = false, shouldStopQuiz = false, answerTimeout;
 
 /// utils etc.
 
@@ -18,7 +19,7 @@ async function getPollQuestion(client, channel, quiz, questions, totalQuestions,
     const prizes = await itemStorage.getInventory(client, client.user.id, {type: "prize"});
     let specialPrize = false;
 
-    if (prizes.length > 0 && totalQuestions >= 5 && questionsLeft*1 === 1) {
+    if (prizes.length > 0 && totalQuestions >= MinimumQuestionsForPrizeAwards && questionsLeft*1 === 1) {
         specialPrize = true;
         channel.send("I have a special prize waiting for whoever answers this...");
     }
@@ -26,7 +27,7 @@ async function getPollQuestion(client, channel, quiz, questions, totalQuestions,
     channel.send(`Question ${totalQuestions-(questionsLeft-1)}/${totalQuestions}: ${question}`);
     questionsLeft--;
 
-    const winningAnswer = await utils.awaitResponses(channel, answer),
+    const winningAnswer = await utils.awaitResponses(channel, answer, { time: TimeLimit }),
         winner = winningAnswer ? winningAnswer.author.id : false;
 
     if (winner) {
@@ -50,6 +51,7 @@ async function getPollQuestion(client, channel, quiz, questions, totalQuestions,
     if (questionsLeft > 0) answerTimeout = setTimeout(()=> getPollQuestion(client, channel, quiz, questions, totalQuestions, questionsLeft), 1000);
     else if (totalQuestions > 1) channel.send("ok, we're done for now. Thanks for playing!");
 
+    if (questionsLeft === 0) quizStarted = false;
 }
 
 //// actions
@@ -70,6 +72,7 @@ function stopQuiz(req) {
     if (!utils.validateModMessage(message, channel)) return channel.send("<@"+author.id+">, Don't tell me what to do!");
 
     shouldStopQuiz = true;
+    quizStarted = false;
     clearTimeout(answerTimeout);
     return channel.send("Ok <@"+author.id+">, the quiz is over. Everybody go home!")
 }
@@ -134,6 +137,8 @@ async function startQuiz(req, target, value, doc) {
     const {author, channel, client, message} = req;
     if (!utils.validateModMessage(message, channel)) return channel.send("<@" + author.id + ">, Don't tell me what to do!");
 
+    if (quizStarted) return channel.send(`<@${author.id}>, there is already a quiz running right now. You can ask me to stop it.`)
+
     const amount = (doc.match('#NumericValue+').text() || "1")*1
     const points = await pointsBank.getPoints(client, client.user.id);
     if (points < AnswerReward * amount) return channel.send("Sorry boss, I'm too broke.");
@@ -144,6 +149,7 @@ async function startQuiz(req, target, value, doc) {
     // Ok - quiz can run. /////////////////////////////////////////////////////////////////////////////////////////////
 
     shouldStopQuiz = false;
+    quizStarted = true;
 
     const quiz = [], all = [...qs];
     while (quiz.length < amount) quiz.push(all.splice(Math.floor(Math.random() * all.length), 1));
