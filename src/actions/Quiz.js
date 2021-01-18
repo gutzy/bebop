@@ -71,6 +71,8 @@ function stopQuiz(req) {
     const {channel, message, author} = req;
     if (!utils.validateModMessage(message, channel)) return channel.send("<@"+author.id+">, Don't tell me what to do!");
 
+    if (!quizStarted) return channel.send("uhhhh <@"+author.id+">, it doesn't seem like a quiz is running now...")
+
     shouldStopQuiz = true;
     quizStarted = false;
     clearTimeout(answerTimeout);
