@@ -42,7 +42,6 @@ module.exports = {
         return username;
     },
 
-
     getTextChannel(client, channelName) {
         return client.channels.cache.find(r => r.name === channelName && r.type === "text");
     }

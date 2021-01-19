@@ -172,8 +172,13 @@ function runDefs(defs, doc, req, hasPrefix = false, isBot = false) {
 
         // Matched, can run
 
-        let matches = [], matcher = nlp(doc.text());
-        if (def.stripMatches) matcher.match(def.stripMatches).replaceWith('');
+        let matches = [], matcher = doc.clone();
+        if (def.stripMatches) {
+            if (typeof def.stripMatches === "string") def.stripMatches = [def.stripMatches]
+            for (let sm of def.stripMatches) {
+                matcher.match(sm).replaceWith('');
+            }
+        }
 
         if (def.match) {
             if (typeof def.match === "string") def.match = [def.match];
