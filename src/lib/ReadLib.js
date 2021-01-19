@@ -144,6 +144,7 @@ function addWorld(world) {
 }
 
 function setRejection(rejection, callback) { rejections[rejection] = callback; }
+function getRejection(rejection) { return rejections[rejection] || null; }
 
 function addDef(callback, has, match = null, stripMatches = null, loose = false, open = false, bots = false) {
     _defs.push({callback, has, match, stripMatches, loose, open, bots});
@@ -222,6 +223,7 @@ module.exports = {
     getResponses,
     getPhrases,
     setRejection,
+    getRejection,
     hadRejection,
     runIntention
 }

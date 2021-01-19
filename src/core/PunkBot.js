@@ -15,6 +15,7 @@ class PunkBot {
     addDefs = (defs) => read.addDefs(defs)
     addWorld = (world) => read.addWorld(world)
     setRejection = (rejection, cb) => read.setRejection(rejection, cb);
+    getRejection = (rejection) => read.getRejection(rejection);
 
     async processDoc(doc, guild, author, client) {
         const members = await guild.members.fetch(),
@@ -35,8 +36,11 @@ class PunkBot {
 
         doc.cache({root:true});
 
-        const res = read.runIntention(doc, {content, author, channel, guild, client, message}, hasPrefix, isBot)
-        if (!res && !read.hadRejection() && hasPrefix) channel.send("<@"+author.id+">, What?")
+        const req = {content, author, channel, guild, client, message}
+        const res = read.runIntention(doc, req, hasPrefix, isBot)
+        if (!res && !read.hadRejection() && hasPrefix && this.getRejection('unmatched')) {
+            this.getRejection('unmatched')(req, doc)
+        }
         return false;
     }
 

@@ -14,10 +14,7 @@ const bot = new PunkBot(Credentials.token, Credentials.username, "bebop");
 ///////////////////////////////////////////////////////////////////////////////
 // Rejections Definitions
 
-// bebop.setRejection("no_target", (req, doc) => { req.channel.send(`<@${req.author.id}>, I'm not sure what to do! Maybe you forgot to include a target?`) })
-bot.setRejection("no_value", (req, doc) => { req.channel.send(`<@${req.author.id}>, hmm, this is confusing! Maybe you didn't enter a value?`) })
-bot.setRejection("value_after", (req, doc) => {req.channel.send(`<@${req.author.id}>, what what..? Maybe you didn't specify the value properly?`) })
-bot.setRejection("unmatched", (req, doc) => {req.channel.send(`<@${req.author.id}>, I still can't think of an answer that will not sound stupid. Master Sp... I mean, MISTER POTATO MAN told me to stay focused!`) })
+bot.setRejection("unmatched", (req, doc) => {req.channel.send(`<@${req.author.id}>, what..?`) })
 
 ///////////////////////////////////////////////////////////////////////////////
 // World Definitions
