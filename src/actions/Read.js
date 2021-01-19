@@ -1,4 +1,4 @@
-async function Analyze(req, target, value, doc) {
+async function Analyze(req, match, doc) {
 
     const terms = doc.termList(),
         result = (terms.map(it => ({text: it.text, tags: it.tags })))

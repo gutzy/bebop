@@ -2,7 +2,7 @@ const Settings = require('../lib/Settings'), read = require('../lib/ReadLib')
 
 const curseMilestones = [ 50, 100, 500, 1000, 5000, 10000 ]
 
-function CurseWords(req, word, value, doc) {
+function CurseWords(req, word, doc) {
     word = word.trim().toLowerCase();
     console.log({word, t: doc.text()})
     const curses = Settings.get('curses', {})

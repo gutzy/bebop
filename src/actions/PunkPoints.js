@@ -1,58 +1,60 @@
 const Settings = require('../lib/Settings'), utils = require("../lib/Utils"), pointsBank = require("../lib/PointsBank");
 
-function giveCommand(req, target, value) {
-    let targetUser, amount;
-    if (target && value) {
-        targetUser = utils.parseUser(target);
-        amount = value * 1;
+function GivePoints(req, matches, doc) {
+    const {client, channel, author, guild} = req;
 
-        req.guild.members.fetch().then(async members => {
+    let targetUser = utils.parseUser(matches[0]),
+        amount = matches[1] * 1;
 
-            const tu = members.find(m => m.user.id*1 === targetUser*1);
-            if (tu) {
-                try {
-                    await pointsBank.givePoints(req.client, req.author.id, tu.id, amount);
-                    return req.channel.send(`Ok <@${req.author.id}>, whatever you want... Giving <@${tu.id}> ${amount} of your punk points...`);
-                } catch (e) {
-                    return req.channel.send(e);
-                }
+    guild.members.fetch().then(async members => {
+
+        const tu = members.find(m => m.user.id*1 === targetUser*1);
+        if (tu) {
+            try {
+                await pointsBank.givePoints(client, author.id, tu.id, amount);
+                return channel.send(`Ok <@${author.id}>, whatever you want... Giving <@${tu.id}> ${amount} of your punk points...`);
+            } catch (e) {
+                return channel.send(e);
             }
-            return req.channel.send("Sorry <@"+req.author.id+">, I can't find the dude. Is he still alive?");
-        });
-    }
-    else {
-        return req.channel.send("Sorry <@"+req.author.id+">, I can't do that.");
-    }
+        }
+        return channel.send("Sorry <@"+author.id+">, I can't find the dude. Is he still alive?");
+    });
 }
 
-async function getYourPoints(req) {
+async function GetBotPoints(req) {
+    const {client, channel, author, guild} = req;
 
-    const points = await pointsBank.getPoints(req.client, req.client.user.id)
+    const points = await pointsBank.getPoints(client, client.user.id)
 
-    if (points) return req.channel.send("<@"+req.author.id+">, I have "+points+" punk points.");
-    return req.channel.send("<@"+req.author.id+">, I am not punk at all :(");
+    if (points) return channel.send("<@"+author.id+">, I have "+points+" punk points.");
+    return channel.send("<@"+author.id+">, I am not punk at all :(");
 }
 
-async function getMyPoints(req) {
+async function GetAuthorPoints(req) {
+    const {client, channel, author} = req;
 
-    const points = await pointsBank.getPoints(req.client, req.author.id)
+    const points = await pointsBank.getPoints(client, author.id)
 
-    if (points) return req.channel.send("<@"+req.author.id+">, you seem to have "+points+" punk points.");
-    return req.channel.send("<@"+req.author.id+">, you are not punk at all.");
+    if (points) return channel.send("<@"+author.id+">, you seem to have "+points+" punk points.");
+    return channel.send("<@"+author.id+">, you are not punk at all.");
 }
 
-async function getUserPoints(req, targetUser) {
+async function GetUserPoints(req, targetUser) {
+    const {client, channel, author, guild} = req;
+
     targetUser = utils.parseUser(targetUser);
-    let points = await pointsBank.getPoints(req.client, targetUser);
-    if (points && points > 0) return req.channel.send("<@"+req.author.id+">, it looks like <@"+targetUser+"> has "+points+" punk points.");
-    else return req.channel.send("<@"+req.author.id+">, it looks like <@"+targetUser+"> is not punk at all...");
+    let points = await pointsBank.getPoints(client, targetUser);
+    if (points && points > 0) return channel.send("<@"+author.id+">, it looks like <@"+targetUser+"> has "+points+" punk points.");
+    else return channel.send("<@"+author.id+">, it looks like <@"+targetUser+"> is not punk at all...");
 }
 
-async function getTopList(req) {
-    let topList = await pointsBank.getTopList(req.client);
+async function GetTopList(req) {
+    const {client, channel, guild} = req;
+
+    let topList = await pointsBank.getTopList(client);
 
     let str = '**Here are the *punkest of them all*...**' + "\n";
-    const members = await req.guild.members.fetch();
+    const members = await guild.members.fetch();
 
     let member;
     topList
@@ -63,10 +65,12 @@ async function getTopList(req) {
             str += `${index + 1}: **${member.nickname ? member.nickname : member.user.username}**: ${entry[1]} punk points` + "\n";
         });
 
-    return req.channel.send(str);
+    return channel.send(str);
 }
 
-async function requestPoints(props, author, channel, guild, client) {
+async function RequestPoints(req) {
+    const { author, channel, client} = req;
+
     const sparedTo = Settings.get("spared-change", []);
     if (sparedTo.indexOf(author.id) > -1) {
         return channel.send("Oh no <@"+author.id+">, I already gave you free points. Don't be a beggar.")
@@ -87,10 +91,10 @@ async function requestPoints(props, author, channel, guild, client) {
 }
 
 module.exports = {
-    give : giveCommand,
-    my : getMyPoints,
-    your: getYourPoints,
-    get : getUserPoints,
-    top: getTopList,
-    request : requestPoints,
+    GivePoints,
+    GetAuthorPoints,
+    GetUserPoints,
+    GetBotPoints,
+    GetTopList,
+    RequestPoints,
 };

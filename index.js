@@ -14,10 +14,10 @@ const bot = new PunkBot(Credentials.token, Credentials.username, "bebop");
 ///////////////////////////////////////////////////////////////////////////////
 // Rejections Definitions
 
-// bebop.setRejection('no_target', (req, doc) => { req.channel.send(`<@${req.author.id}>, I'm not sure what to do! Maybe you forgot to include a target?`) })
-bot.setRejection('no_value', (req, doc) => { req.channel.send(`<@${req.author.id}>, hmm, this is confusing! Maybe you didn't enter a value?`) })
-bot.setRejection('value_after', (req, doc) => {req.channel.send(`<@${req.author.id}>, what what..? Maybe you didn't specify the value properly?`) })
-bot.setRejection('unmatched', (req, doc) => {req.channel.send(`<@${req.author.id}>, I still can't think of an answer that will not sound stupid. Master Sp... I mean, MISTER POTATO MAN told me to stay focused!`) })
+// bebop.setRejection("no_target", (req, doc) => { req.channel.send(`<@${req.author.id}>, I'm not sure what to do! Maybe you forgot to include a target?`) })
+bot.setRejection("no_value", (req, doc) => { req.channel.send(`<@${req.author.id}>, hmm, this is confusing! Maybe you didn't enter a value?`) })
+bot.setRejection("value_after", (req, doc) => {req.channel.send(`<@${req.author.id}>, what what..? Maybe you didn't specify the value properly?`) })
+bot.setRejection("unmatched", (req, doc) => {req.channel.send(`<@${req.author.id}>, I still can't think of an answer that will not sound stupid. Master Sp... I mean, MISTER POTATO MAN told me to stay focused!`) })
 
 ///////////////////////////////////////////////////////////////////////////////
 // World Definitions
@@ -29,15 +29,15 @@ bot.addWorld([
     // things
         {type: "thing", singular: "point", plural: "points"},
     // actions
-        {type: "action", action: "help" },
-        {type: "action", action: "start", synonyms: ["begin","run","initialize"] },
-        {type: "action", action: "add", synonyms: ["create"] },
-        {type: "action", action: "remove", synonyms: ["delete"] },
-        {type: "action", action: "stop", synonyms: ["end"] },
-        {type: "action", action: "list" },
-        {type: "action", action: "remember" },
-        {type: "action", action: "give", synonyms: ["provide", "hand out","supply","offer","grant","award","bestow"]},
-        {type: "action", action: "analyze", synonyms: ["dissect"]},
+        {type: "action", action: "Help" },
+        {type: "action", action: "Start", synonyms: ["begin","run","initialize"] },
+        {type: "action", action: "Add", synonyms: ["create"] },
+        {type: "action", action: "Remove", synonyms: ["delete"] },
+        {type: "action", action: "Stop", synonyms: ["end"] },
+        {type: "action", action: "List" },
+        {type: "action", action: "Remember" },
+        {type: "action", action: "Give", synonyms: ["provide", "hand out","supply","offer","grant","award","bestow"]},
+        {type: "action", action: "Analyze", synonyms: ["dissect"]},
     // Words
         {type: "words", words: ["fuck","shit","cunt","wanker","fucker"], tags: ["CurseWord"] }
 ])
@@ -47,40 +47,41 @@ bot.addWorld([
 
     bot.addDefs([
     // HELP
-        { type: 'command',   callback: Help.showHelp, action: "help" },
+        { callback: Help.showHelp, has: "^help"},
 
     // LISTEN
-        { type: 'response',  callback: Listen.CurseWords, phrase: "#CurseWord", loose: true, open: true, bots: false },
+        { callback: Listen.CurseWords, has: "#CurseWord+", match: "#CurseWord", loose: true, open: true, bots: false },
 
     // READ
-        { type: 'command',   callback: Read.Analyze, action: "analyze", target: "*" },
+        { callback: Read.Analyze, has: "^analyze .", stripMatches: "^analyze" },
 
     // REMEMBER
-        { type: 'command',   callback: Remember.saveMemory, action: "remember", target: "*"},
-        { type: 'answer',    callback: Remember.loadMemory, question: "(what)? #AbilityQuestion+ remember"},
+        { callback: Remember.saveMemory, has: "^remember .", stripMatches: "^analyze" },
+        { callback: Remember.loadMemory, has: "(what)? #AbilityQuestion+ remember" },
 
    // ASK
-        { type: 'answer',    callback: Ask.WhoIs, question: "who is this?", target: "#Noun+"},
-        { type: 'answer',    callback: Ask.WhoAreYou, question: "who are you"},
-        { type: 'answer',    callback: Ask.WhoAmI, question: "who am i?"},
-        { type: 'answer',    callback: Ask.WhatsMyAgeAgain, question: "what's my age again", open: true},
-        { type: 'answer',    callback: Ask.CurrencyCovertAmount, question: "#QuantityQuestion", attribute: "/[a-zA-Z]{3}/ *", target: "#NumericValue"},
-        { type: 'response',  callback: Ask.GunOnMyBack, phrase: "It's not my imagination", open: true, bots: false },
+        { callback: Ask.WhoIs, has: "^who is this?", match: "#Noun+"},
+        { callback: Ask.WhoAreYou, has: "^who are you"},
+        { callback: Ask.WhoAmI, has: "^who am i?"},
+        { callback: Ask.WhatsMyAgeAgain, has: "what is my age again$", open: true },
+        { callback: Ask.CurrencyCovertAmount, has: "^(#QuantityQuestion|convert) #NumericValue /[a-zA-Z]{3}/ * (in|to)? /[a-zA-Z]{3}/", matches: ["#NumericValue", "/[a-zA-Z]{3}/", "/[a-zA-Z]{3}/"]},
+        { callback: Ask.GunOnMyBack, has: "It is not my imagination", open: true },
 
     // PUNK POINTS
-        { type: 'command',   callback: PunkPoints.give, action: "give", thing: "point", target: "#Username", value: '#Value+', valueTransform: (m => m.numbers().toNumber()) },
-        { type: 'answer',    callback: PunkPoints.get, question: "#LevelQuestion+", attribute: "punk", target: "is #Username", targetTransform: (m => m.match('#Username')) },
-        { type: 'answer',    callback: PunkPoints.get, question: "#QuantityQuestion+", attribute: "points", target: "#Username (got|have|has)", targetTransform: (m => m.match('#Username')) },
-        { type: 'answer',    callback: PunkPoints.my, question: "#LevelQuestion+", attribute: "punk", target: "am #Author" },
-        { type: 'answer',    callback: PunkPoints.my, question: "#QuantityQuestion+", attribute: "points", target: "#Author (got|have|has)" },
-        { type: 'answer',    callback: PunkPoints.your, question: "#LevelQuestion+", attribute: "punk", target: "(are|is) (you|bebop)" },
+        { callback: PunkPoints.GivePoints, has: "^#Give #Username * #NumericValue punk? #Point", match: ["#Username","#NumericValue"] },
+        { callback: PunkPoints.GivePoints, has: "^#Give * #NumericValue punk? #Point to #Username", match: ["#Username","#NumericValue"] },
+        { callback: PunkPoints.GetAuthorPoints, has: "^#LevelQuestion+ punk (is|am) #Author" },
+        { callback: PunkPoints.GetAuthorPoints, has: "^#QuantityQuestion+ punk? #Point * #Author (got|have|has)?" },
+        { callback: PunkPoints.GetUserPoints, has : "^#LevelQuestion+ punk (is|are) #Username", match: "#Username" },
+        { callback: PunkPoints.GetUserPoints, has: "^#QuantityQuestion+ punk? #Point * #Username (got|have|has)?", match: "#Username" },
+        { callback: PunkPoints.GetBotPoints, has: "^#LevelQuestion+ punk (is|are) (#Self|bebop)" },
 
    // QUIZ
-        { type: 'command',   callback: Quiz.startQuiz, action: "start", target: "(a|the)? quiz"},
-        { type: 'command',   callback: Quiz.stopQuiz, action: "stop", target: "(a|the)? quiz"},
-        { type: 'command',   callback: Quiz.addQuestion, action: "add", target: "(a|the)? quiz question"},
-        { type: 'command',   callback: Quiz.listQuestions, action: "list", target: "the? quiz questions"},
-        { type: 'command',   callback: Quiz.removeQuestion, action: "remove", target: "the? quiz question"},
+        { callback: Quiz.startQuiz, has: "^start (a|the)? quiz", match: "#NumericValue"},
+        { callback: Quiz.stopQuiz, has: "^stop (a|the)? quiz"},
+        { callback: Quiz.addQuestion, has: "^add (a|the)? quiz question"},
+        { callback: Quiz.listQuestions, has: "^list the? quiz questions"},
+        { callback: Quiz.removeQuestion, has: "^remove the? quiz question", match: "#NumericValue"},
     ])
 
 ///////////////////////////////////////////////////////////////////////////////

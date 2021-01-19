@@ -99,7 +99,7 @@ async function addQuestion(req) {
 
 }
 
-async function removeQuestion(req, target, value, doc) {
+async function removeQuestion(req, matches, doc) {
 
     const {props, author, channel, message} = req;
     if (!utils.validateModMessage(message, channel)) return channel.send("<@"+author.id+">, Don't tell me what to do!");
@@ -134,7 +134,7 @@ async function removeQuestion(req, target, value, doc) {
     }
 }
 
-async function startQuiz(req, target, value, doc) {
+async function startQuiz(req, matches, doc) {
 
     const {author, channel, client, message} = req;
     if (!utils.validateModMessage(message, channel)) return channel.send("<@" + author.id + ">, Don't tell me what to do!");

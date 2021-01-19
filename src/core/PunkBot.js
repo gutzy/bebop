@@ -12,25 +12,8 @@ class PunkBot {
         this.client.login();
     }
 
-    addDefs(defs) {
-        let responses = [], commands = [], answers = [];
-        for (let def of defs) {
-            switch (def.type) {
-                case 'response': responses.push(def); break;
-                case 'command': commands.push(def); break;
-                case 'answer': answers.push(def); break;
-            }
-        }
-        if (commands.length > 0) this.addCommands(commands);
-        if (answers.length > 0) this.addAnswers(answers);
-        if (responses.length > 0) this.addResponses(responses);
-    }
-
+    addDefs = (defs) => read.addDefs(defs)
     addWorld = (world) => read.addWorld(world)
-    addResponses = (responses) => read.addResponses(responses);
-    addCommands = (commands) => read.addCommands(commands);
-    addAnswers = (answers) => read.addAnswers(answers);
-    addWords = (words, tags) => read.addWords(words, tags);
     setRejection = (rejection, cb) => read.setRejection(rejection, cb);
 
     async processDoc(doc, guild, author, client) {
@@ -65,7 +48,7 @@ class PunkBot {
                 return false;
             }
             // run commands
-            this.runCommands(content, author, channel, guild, client, message);
+            await this.runCommands(content, author, channel, guild, client, message);
             return false;
         });
     }
