@@ -1,6 +1,8 @@
 const PunkBot = require('./src/core/PunkBot');
 const Credentials = require('./src/sec/credentials');
 
+const CurrencyDoc = require('./src/processors/CurrencyDoc');
+
 const Read = require('./src/actions/Read');
 const Remember = require('./src/actions/Remember');
 const Listen = require('./src/actions/Listen');
@@ -9,12 +11,17 @@ const PunkPoints = require('./src/actions/PunkPoints');
 const Help = require('./src/actions/Help');
 const Quiz = require('./src/actions/Quiz');
 
-const bot = new PunkBot(Credentials.token, Credentials.username, "bebop");
+const bot = new PunkBot(Credentials.token, Credentials.username, "bebop", __dirname);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Rejections Definitions
 
 bot.setRejection("unmatched", (req, doc) => {req.channel.send(`<@${req.author.id}>, what..?`) })
+
+///////////////////////////////////////////////////////////////////////////////
+// Set doc pre-processing
+
+bot.addProcessor(CurrencyDoc)
 
 ///////////////////////////////////////////////////////////////////////////////
 // World Definitions
@@ -44,6 +51,7 @@ bot.addWorld([
 
     bot.addDefs([
     // HELP
+        { callback: Help.arise, has: "^arise"},
         { callback: Help.showHelp, has: "^help"},
 
     // LISTEN
@@ -61,7 +69,7 @@ bot.addWorld([
         { callback: Ask.WhoAreYou, has: "^who are you"},
         { callback: Ask.WhoAmI, has: "^who am i?"},
         { callback: Ask.WhatsMyAgeAgain, has: "what is my age again$", open: true },
-        { callback: Ask.CurrencyCovertAmount, has: "^(#QuantityQuestion|convert) #NumericValue /[a-zA-Z]{3}/ * (in|to)? /[a-zA-Z]{3}/", matches: ["#NumericValue", "/[a-zA-Z]{3}/", "/[a-zA-Z]{3}/"]},
+        { callback: Ask.CurrencyCovertAmount, has: "^(#QuantityQuestion+|convert)+ (are|is)? #Value+ #Currency+ * (in|to)? #Currency+", match: ["#Value+", "#Currency+", "#Currency+"]},
         { callback: Ask.GunOnMyBack, has: "It is not my imagination", open: true },
 
     // PUNK POINTS
@@ -72,6 +80,7 @@ bot.addWorld([
         { callback: PunkPoints.GetUserPoints, has : "^#LevelQuestion+ punk (is|are) #Username", match: "#Username" },
         { callback: PunkPoints.GetUserPoints, has: "^#QuantityQuestion+ punk? #Point * #Username (got|have|has)?", match: "#Username" },
         { callback: PunkPoints.GetBotPoints, has: "^#LevelQuestion+ punk (is|are) (#Self|bebop)" },
+        { callback: PunkPoints.RequestPoints, has: "^spare some change" },
 
    // QUIZ
         { callback: Quiz.startQuiz, has: "^start (a|the)? quiz", match: "#NumericValue"},

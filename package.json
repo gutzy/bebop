@@ -6,6 +6,7 @@
   "author": "guszi",
   "license": "MIT",
   "dependencies": {
+    "canvas": "^2.6.1",
     "compromise": "^13.8.0",
     "compromise-numbers": "^1.1.0",
     "compromise-sentences": "^0.1.1",

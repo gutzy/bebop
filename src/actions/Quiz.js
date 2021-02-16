@@ -2,7 +2,7 @@ const Settings = require('../lib/Settings'), utils = require('../lib/Utils'), {g
     pointsBank = require("../lib/PointsBank"), itemStorage = require("../lib/ItemStorage");
 
 const AnswerReward = 5;
-const TimeLimit = 10;
+const TimeLimit = 13;
 const MinimumQuestionsForPrizeAwards = 5;
 
 let quizStarted = false, shouldStopQuiz = false, answerTimeout;

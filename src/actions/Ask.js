@@ -1,4 +1,16 @@
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'), {getDoc} = require('../lib/ReadLib');
+const Currencies = require('../lib/data/Currencies.json');
+
+const eqLower = (a,b) => a.toLowerCase().trim() === b.toLowerCase().trim()
+
+function findCurrency(type) {
+    let aliases;
+    for (let code in Currencies) {
+        if (eqLower(code, type)) return code;
+        aliases = typeof Currencies[code] === "string" ? [Currencies[code]] : Currencies[code];
+        for (let alias of aliases) if (eqLower(alias, type)) return code;
+    }
+}
 
 async function WhoIs(req, match, doc) {
     if (doc.has('#Author')) return req.channel.send(`<@${req.author.id}>, it is you!`)
@@ -12,24 +24,20 @@ async function WhoAreYou(req, matches, doc) {
     req.channel.send(`<@${req.author.id}> I am bebop.. I'm a mutant punk pig!`)
 }
 
-async function CurrencyCovertAmount(req, matches, doc) {
-    console.log(matches);
-    // let currencies = doc.match('/[A-Za-z]{3}/').out('array').map(it => it.toUpperCase());
-    // value = doc.match('#NumericValue').text();
-    // let info = await fetch("https://api.exchangeratesapi.io/latest");
-    // let {rates, base} = await info.json();
-    // let a, b;
-    // for (let r of currencies) {
-    //     if (rates[r]) {
-    //         if (b) break; if (a) b = r; else a = r;
-    //     }
-    // }
-    // if (a && b) {
-    //     const res = parseFloat(value/rates[a]*rates[b]).toFixed(2)
-    //     req.channel.send(`<@${req.author.id}>, ${value.toString()} ${a} is worth about ${res} ${b}`)
-    // }
-    // else {
-    // }
+async function CurrencyCovertAmount(req, [amount, from, to], doc) {
+
+    from = getDoc(from).nouns().toSingular().text();
+    to = getDoc(to).nouns().toSingular().text();
+    amount = (getDoc(amount).numbers().json())[0]['number'] || 1;
+
+    const fromCurrency = findCurrency(from), toCurrency = findCurrency(to);
+    let info = await fetch("https://api.exchangeratesapi.io/latest");
+    let {rates, base} = await info.json();
+
+    if (!rates[fromCurrency]) return req.channel.send(`<@${req.author.id}>, I don't have currency rate information for ${from}, sorry...`)
+    if (!rates[toCurrency]) return req.channel.send(`<@${req.author.id}>, I don't have currency rate information for ${to}, sorry...`)
+   const res = parseFloat((amount/rates[fromCurrency]*rates[toCurrency])+'').toFixed(2)
+    req.channel.send(`<@${req.author.id}>, ${amount} ${from} is worth about ${res} ${to}`)
 }
 
 async function WhoAmI(req, matches, doc) {

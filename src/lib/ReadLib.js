@@ -13,7 +13,7 @@ const QuestionTypes = {
 const requestPrefixes = ["Please", "Would you", "Could you", "Will you", "May I ask you to"]
 
 let _init = false, _hadRejection = false;
-const _defs = [], _responses = [], _phrases = [], rejections = {};
+const _defs = [], _responses = [], _phrases = [], rejections = {}, env = {};
 
 const DEBUG = false;
 
@@ -56,6 +56,8 @@ function init() {
 
     _init = true;
 }
+
+
 
 function _addAction(action, synonyms = []) {
     nlp.extend((Doc, world) => {
@@ -143,6 +145,10 @@ function addWorld(world) {
     }
 }
 
+function setEnvProp(prop,value) {
+    if (prop) env[prop] = value;
+}
+
 function setRejection(rejection, callback) { rejections[rejection] = callback; }
 function getRejection(rejection) { return rejections[rejection] || null; }
 
@@ -195,7 +201,7 @@ function runDefs(defs, doc, req, hasPrefix = false, isBot = false) {
         }
 
         matches = def.match ? (def.match.length > 1 ? matches : (matches[0] || null) ) : matcher.text();
-        def.callback(req, matches, doc);
+        def.callback(req, matches, doc, env);
         return true;
     }
 }
@@ -228,6 +234,7 @@ module.exports = {
     getResponses,
     getPhrases,
     setRejection,
+    setEnvProp,
     getRejection,
     hadRejection,
     runIntention
